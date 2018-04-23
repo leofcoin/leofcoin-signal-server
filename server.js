@@ -155,7 +155,7 @@ const store = {};
 
 if (process.argv.indexOf('olivia') !== -1) process.env.network = 'olivia';
 else process.env.network = 'leofcoin';
-process.env.PORT = process.env.PORT || 5555;
+process.env.PORT = process.env.PORT || 8080;
 if (process.argv.indexOf('--no-front') === -1) {
   api.get('/', (req, res) => __async(function*(){
     const netAddressHex = `${Buffer.from(process.env.network).toString('hex')}`;
