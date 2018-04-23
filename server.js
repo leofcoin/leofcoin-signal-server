@@ -66,6 +66,7 @@ if (process.platform === 'win32') {
 }
 const initRepo = () => new Promise((resolve, reject) => __async(function*(){
   const { repo, spec } = yield repoConfigs.config();
+  repo.Addresses.Gateway = '/ip4/127.0.0.1/tcp/9090';
   const dataSpecPath = path.join(networkPath, 'datastore_spec');
   ipfsRepo.init(repo, error => __async(function*(){
     if (error) reject(error);
@@ -111,7 +112,7 @@ const spawn = options => new Promise((resolve, reject) => {
   });
 });
 
-const start = (ipfsd, flags) => new Promise((resolve, reject) => {
+const start = (ipfsd, flags) => new Promise((resolve, reject) => __async(function*(){
   ipfsd.start(flags, error => {
     if (error) reject(error);
     ipfsd.api.id().then(({addresses}) => {
@@ -122,7 +123,7 @@ const start = (ipfsd, flags) => new Promise((resolve, reject) => {
     }).catch(error => reject(error));
     resolve();
   });
-});
+}()));
 
 const IPFSNode = (flags = ['--enable-pubsub-experiment']) => new Promise((resolve, reject) => __async(function*(){
   const ipfstStartTime = Date.now();
