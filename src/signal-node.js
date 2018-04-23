@@ -23,7 +23,14 @@ if (process.platform === 'win32') {
 };
 
 const initRepo = () => new Promise(async (resolve, reject) => {
-  const { repo, spec } = await config();
+  const { repo, spec } = await config({
+    bootstrapFor: 'earth',
+    sharding: true
+  });
+  repo.Addresses.Swarm = [
+    '/ip4/0.0.0.0/tcp/4002',
+    '/ip6/::/tcp/4002'
+  ]
   repo.Addresses.Gateway = '/ip4/127.0.0.1/tcp/9090';
   const dataSpecPath = join(networkPath, 'datastore_spec')
   ipfsRepo.init(repo, async error => {

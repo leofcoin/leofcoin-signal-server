@@ -65,7 +65,10 @@ if (process.platform === 'win32') {
   });
 }
 const initRepo = () => new Promise((resolve, reject) => __async(function*(){
-  const { repo, spec } = yield repoConfigs.config();
+  const { repo, spec } = yield repoConfigs.config({
+    bootstrapFor: 'earth',
+    sharding: true
+  });
   repo.Addresses.Gateway = '/ip4/127.0.0.1/tcp/9090';
   const dataSpecPath = path.join(networkPath, 'datastore_spec');
   ipfsRepo.init(repo, error => __async(function*(){
