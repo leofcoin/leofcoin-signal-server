@@ -1,0 +1,26 @@
+{
+  "name": "leofcoin-signal-server",
+  "version": "0.1.0",
+  "main": "server.js",
+  "license": "MIT",
+  "scripts": {
+    "heroku-postbuild": "yarn global add rollup && yarn build",
+    "build": "rollup -c",
+    "start": "node server.js" 
+  },
+  "dependencies": {
+    "chalk": "^2.4.0",
+    "crypto-io-fs": "^0.1.2",
+    "express": "^4.16.3",
+    "go-ipfs-dep": "^0.4.14",
+    "ipfs": "^0.28.2",
+    "ipfsd-ctl": "^0.32.1",
+    "leofcoin-hash": "^0.1.0",
+    "leofcoin-params": "^0.1.0",
+    "repo-configs": "^0.3.0"
+  },
+  "devDependencies": {
+    "rollup": "^0.58.1",
+    "rollup-plugin-async": "^1.2.0"
+  }
+}
