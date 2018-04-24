@@ -16,6 +16,17 @@ var ip = require('ip');
 
 function __async(g){return new Promise(function(s,j){function c(a,x){try{var r=g[x?"throw":"next"](a);}catch(e){j(e);return}r.done?s(r.value):Promise.resolve(r.value).then(c,d);}function d(e){c(e,1);}c();})}
 
+const arg = [
+  process.argv.indexOf('-v'),
+  process.argv.indexOf('--verbose'),
+  process.env.VERBOSE ? 1 : -1
+].reduce((p, c) => {
+  if (c > p) return c;
+  return Number(p)
+}, -1);
+const verbose = Boolean(arg >= 0);
+const log = text => {if (verbose) console.log(text);};
+
 /**
  * connect to leofcoin-peernet -> peernet sends peers -> peernet send new connected peer to already connected peers
  */
@@ -30,20 +41,25 @@ var star = (address, pubsub) => {
   const prefix = process.env.network === 'leofcoin' ? 'leofcoin-' : 'leofcoin-olivia-';
   const peerset = new Map();
 
-  const peernet = message => {
+  /**
+   * A new peer has connected, send current connected peers & notify the new peer to current ones.
+   */
+  const peernet = ({ from, data }) => {
+    log(`Peer: ${from} connected`);
     // send current peerset to the connected peer
     publish(bs58.encode(Buffer.from(`${prefix}peernet-peers`)), Buffer.from(JSON.stringify(Array.from(peerset.entries()))));
     // add the peer to peerset
-  	peerset.set(message.from, message.data.toString());
+  	peerset.set(from, data.toString());
     // notice the other peers that a new peer has connected
-    publish(bs58.encode(Buffer.from(`${prefix}peernet-peer-connect`)), message.data);
+    publish(bs58.encode(Buffer.from(`${prefix}peernet-peer-connect`)), data);
   };
 
   /**
    * removes peer from peerset
    */
-  const peerdisconnect = message => {
-    peerset.delete(message.from);
+  const peerdisconnect = ({ from }) => {
+    log(`Peer: ${from} disconnected`);
+    peerset.delete(from);
   };
 	subscribe(bs58.encode(Buffer.from(`${prefix}peernet`)), peernet);
   subscribe(bs58.encode(Buffer.from(`${prefix}peernet-peer-disconnect`)), peerdisconnect);
@@ -69,6 +85,10 @@ const initRepo = () => new Promise((resolve, reject) => __async(function*(){
     bootstrapFor: 'earth',
     sharding: true
   });
+  repo.Addresses.Swarm = [
+    '/ip4/0.0.0.0/tcp/4002',
+    '/ip6/::/tcp/4002'
+  ];
   repo.Addresses.Gateway = '/ip4/127.0.0.1/tcp/9090';
   const dataSpecPath = path.join(networkPath, 'datastore_spec');
   ipfsRepo.init(repo, error => __async(function*(){
@@ -137,8 +157,9 @@ const IPFSNode = (flags = ['--enable-pubsub-experiment']) => new Promise((resolv
     process.on('SIGINT', () => __async(function*(){
       yield ipfsd.stop();
       setTimeout(() => __async(function*(){
+        yield cleanRepo();
         process.exit();
-      }()), 50);
+      }()), 100);
     }()));
     console.log(`Daemon startup time: ${(Date.now() - ipfstStartTime) / 1000}s`);
     resolve(ipfsd);

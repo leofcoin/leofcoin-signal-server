@@ -106,8 +106,9 @@ export const IPFSNode = (flags = ['--enable-pubsub-experiment']) => new Promise(
     process.on('SIGINT', async () => {
       await ipfsd.stop();
       setTimeout(async () => {
+        await cleanRepo()
         process.exit();
-      }, 50);
+      }, 100);
     });
     console.log(`Daemon startup time: ${(Date.now() - ipfstStartTime) / 1000}s`);
     resolve(ipfsd);
