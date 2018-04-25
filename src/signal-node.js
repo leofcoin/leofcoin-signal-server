@@ -6,8 +6,8 @@ import { join } from 'path';
 import { config } from 'repo-configs';
 import star from './signal';
 import chalk from 'chalk';
+import { networkPath } from './params';
 const { exists, write } = fs;
-const networkPath = join(process.cwd(), process.env.network === 'olivia' ? '.leofcoin/olivia' : '.leofcoin')
 const ipfsRepo = new REPO(networkPath);
 const factory = IPFSFactory.create({type: 'go'});
 

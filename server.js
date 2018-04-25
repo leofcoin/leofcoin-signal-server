@@ -3,42 +3,69 @@
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
 var bs58 = require('bs58');
+var leofcoinHash = require('leofcoin-hash');
+var path = require('path');
 var REPO = require('ipfs-repo');
 var IPFSFactory = require('ipfsd-ctl');
 var fs = require('crypto-io-fs');
 var fs$1 = require('fs');
-var path = require('path');
 var repoConfigs = require('repo-configs');
 var chalk = _interopDefault(require('chalk'));
 var express = _interopDefault(require('express'));
-var leofcoinHash = require('leofcoin-hash');
 var ip = require('ip');
 
 function __async(g){return new Promise(function(s,j){function c(a,x){try{var r=g[x?"throw":"next"](a);}catch(e){j(e);return}r.done?s(r.value):Promise.resolve(r.value).then(c,d);}function d(e){c(e,1);}c();})}
 
-const arg = [
-  process.argv.indexOf('-v'),
-  process.argv.indexOf('--verbose'),
+const argv = process.argv;
+
+const network = (() => {
+  const index = argv.indexOf('--network');
+  return process.env.NETWORK || (index > -1) ? argv[index + 1] : 'leofcoin';
+})();
+console.log(network);
+const verbose = Boolean([
+  argv.indexOf('-v'),
+  argv.indexOf('--verbose'),
   process.env.VERBOSE ? 1 : -1
 ].reduce((p, c) => {
   if (c > p) return c;
   return Number(p)
-}, -1);
-const verbose = Boolean(arg >= 0);
+}, -1) >= 0);
+
+const netHash = net => bs58.encode(leofcoinHash.keccak(Buffer.from(`${net}-`), 256)).slice(0, 24);
+
+const mainNethash = netHash('leofcoin');
+
+/**
+ * returns the hash for a subnet, prefixed with mainNethash
+ */
+const subnetHash = net => {
+  const prefix = mainNethash.slice(0, 4);
+  const hash = netHash(net);
+  return `${prefix}${hash.slice(4, hash.length)}`
+};
+const testNethash = subnetHash('olivia');
+
+const netPrefix = (net => net === 'leofcoin' ? mainNethash : testNethash)();
+
+const networkPath = path.join(process.cwd(), network === 'olivia' ? '.leofcoin/olivia' : '.leofcoin');
+
+const port = process.env.PORT || 8080;
+
 const log = text => {if (verbose) console.log(text);};
 
 /**
  * connect to leofcoin-peernet -> peernet sends peers -> peernet send new connected peer to already connected peers
  */
 /**
- * @param {method} options.subscribe pubsub subscriber
- * @param {method} options.publish pubsub publisher
+ * @param {string} network the network to listen on 'default: olivia'
+ * @param {method} pubsub
+ * @param {method} pubsub.publish pubsub publisher
  */
 var star = (address, pubsub) => {
   if (!pubsub && !global.ipfs) throw Error('pubsub client not found');
   else if (!pubsub && global.ipfs) pubsub = global.ipfs.pubsub;
   const {subscribe, publish} = pubsub;
-  const prefix = process.env.network === 'leofcoin' ? 'leofcoin-' : 'leofcoin-olivia-';
   const peerset = new Map();
 
   /**
@@ -47,11 +74,11 @@ var star = (address, pubsub) => {
   const peernet = ({ from, data }) => {
     log(`Peer: ${from} connected`);
     // send current peerset to the connected peer
-    publish(bs58.encode(Buffer.from(`${prefix}peernet-peers`)), Buffer.from(JSON.stringify(Array.from(peerset.entries()))));
+    publish(bs58.encode(Buffer.from(`${netPrefix}peernet-peers`)), Buffer.from(JSON.stringify(Array.from(peerset.entries()))));
     // add the peer to peerset
   	peerset.set(from, data.toString());
     // notice the other peers that a new peer has connected
-    publish(bs58.encode(Buffer.from(`${prefix}peernet-peer-connect`)), data);
+    publish(bs58.encode(Buffer.from(`${netPrefix}peernet-peer-connect`)), data);
   };
 
   /**
@@ -61,12 +88,11 @@ var star = (address, pubsub) => {
     log(`Peer: ${from} disconnected`);
     peerset.delete(from);
   };
-	subscribe(bs58.encode(Buffer.from(`${prefix}peernet`)), peernet);
-  subscribe(bs58.encode(Buffer.from(`${prefix}peernet-peer-disconnect`)), peerdisconnect);
+	subscribe(bs58.encode(Buffer.from(`${netPrefix}peernet`)), peernet);
+  subscribe(bs58.encode(Buffer.from(`${netPrefix}peernet-peer-disconnect`)), peerdisconnect);
 };
 
 const { exists, write } = fs;
-const networkPath = path.join(process.cwd(), process.env.network === 'olivia' ? '.leofcoin/olivia' : '.leofcoin');
 const ipfsRepo = new REPO(networkPath);
 const factory = IPFSFactory.create({type: 'go'});
 
@@ -177,20 +203,16 @@ const IPFSNode = (flags = ['--enable-pubsub-experiment']) => new Promise((resolv
 const api = express();
 const store = {};
 
-
-if (process.argv.indexOf('olivia') !== -1) process.env.network = 'olivia';
-else process.env.network = 'leofcoin';
-process.env.PORT = process.env.PORT || 8080;
 if (process.argv.indexOf('--no-front') === -1) {
   api.get('/', (req, res) => __async(function*(){
-    const netAddressHex = `${Buffer.from(process.env.network).toString('hex')}`;
+    const netAddressHex = `${Buffer.from(network).toString('hex')}`;
     const relaynethash = leofcoinHash.keccak(netAddressHex, 256).toString('hex');
     const template = `
       <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);">
         <h1>Leofcoin relay node</h1>
         <p>This node is meant for nodes with restricted network access</p>
         <br>      
-        <p><strong>network: </strong>${process.env.network}</p>
+        <p><strong>network: </strong>${network}</p>
         <p><strong>peerID: </strong>${store.id}</p>
         <p><strong>relaynethash: </strong> ${bs58.encode(relaynethash)}</p>
         <br>
@@ -203,7 +225,7 @@ if (process.argv.indexOf('--no-front') === -1) {
           <h1>Leofcoin relay node</h1>
           <p>This node is meant for nodes with restricted network access</p>
           <br>      
-          <p><strong>network: </strong>${process.env.network}</p>
+          <p><strong>network: </strong>${network}</p>
           <p><strong>peerID: </strong>${store.id}</p>
           <p><strong>relaynethash: </strong> ${bs58.encode(relaynethash)}</p>
           <br>
@@ -217,7 +239,7 @@ if (process.argv.indexOf('--no-front') === -1) {
     timeoutUntilAddress();      
   }()));
   
-  api.listen(process.env.PORT, () => console.log(`Server ready @ http://localhost:${process.env.PORT}!`));
+  api.listen(port, () => console.log(`Server ready @ http://localhost:${port}!`));
 }
 
 (() => __async(function*(){

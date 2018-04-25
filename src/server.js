@@ -3,23 +3,21 @@ import express from 'express';
 import { keccak } from 'leofcoin-hash';
 import { encode } from 'bs58';
 import { address } from 'ip';
+import { network, port } from './params';
+
 const api = express()
 const store = {};
 
-
-if (process.argv.indexOf('olivia') !== -1) process.env.network = 'olivia';
-else process.env.network = 'leofcoin';
-process.env.PORT = process.env.PORT || 8080;
 if (process.argv.indexOf('--no-front') === -1) {
   api.get('/', async (req, res) => {
-    const netAddressHex = `${Buffer.from(process.env.network).toString('hex')}`
+    const netAddressHex = `${Buffer.from(network).toString('hex')}`
     const relaynethash = keccak(netAddressHex, 256).toString('hex');
     const template = `
       <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);">
         <h1>Leofcoin relay node</h1>
         <p>This node is meant for nodes with restricted network access</p>
         <br>      
-        <p><strong>network: </strong>${process.env.network}</p>
+        <p><strong>network: </strong>${network}</p>
         <p><strong>peerID: </strong>${store.id}</p>
         <p><strong>relaynethash: </strong> ${encode(relaynethash)}</p>
         <br>
@@ -32,7 +30,7 @@ if (process.argv.indexOf('--no-front') === -1) {
           <h1>Leofcoin relay node</h1>
           <p>This node is meant for nodes with restricted network access</p>
           <br>      
-          <p><strong>network: </strong>${process.env.network}</p>
+          <p><strong>network: </strong>${network}</p>
           <p><strong>peerID: </strong>${store.id}</p>
           <p><strong>relaynethash: </strong> ${encode(relaynethash)}</p>
           <br>
@@ -46,7 +44,7 @@ if (process.argv.indexOf('--no-front') === -1) {
     timeoutUntilAddress()      
   });
   
-  api.listen(process.env.PORT, () => console.log(`Server ready @ http://localhost:${process.env.PORT}!`));
+  api.listen(port, () => console.log(`Server ready @ http://localhost:${port}!`));
 }
 
 (async () => {
