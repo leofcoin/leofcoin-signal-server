@@ -55,6 +55,7 @@ class SpaceRoom extends PeerMonitor {
     }, (err, res) => {});
 
     this.topic = topic;
+    this.peer = [];
 
     this._peerJoined = this._peerJoined.bind(this);
     this._peerLeft = this._peerLeft.bind(this);

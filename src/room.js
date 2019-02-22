@@ -16,9 +16,7 @@ export default class SpaceRoom extends PeerMonitor {
     }, (err, res) => {})
 
     this.topic = topic;
-    (async () => {
-      this.peers = await this.getPeers();
-    })
+    this.peer = [];
 
     this._peerJoined = this._peerJoined.bind(this);
     this._peerLeft = this._peerLeft.bind(this);
