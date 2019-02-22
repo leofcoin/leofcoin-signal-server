@@ -1,6 +1,6 @@
 {
   "name": "leofcoin-signal-server",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "server.js",
   "license": "MIT",
   "scripts": {
@@ -12,7 +12,7 @@
     "express": "^4.16.3",
     "ipfs-pubsub-1on1": "0.0.4",
     "ipfs-pubsub-peer-monitor": "0.0.8",
-    "ipfsd-node": "^0.2.5",
+    "ipfsd-node": "^0.2.10",
     "leofcoin-hash": "^0.1.0",
     "leofcoin-params": "^0.1.0"
   },

@@ -61,12 +61,13 @@ if (process.argv.indexOf('--no-front') === -1) {
       swarm: 4002,
       gateway: 9090,
       api: 5002
-    }
+    },
+    ws: true
   });
   const { ipfs, addresses } = await ipfsd.start();
   const { id } = await ipfs.id();
   new SignalRoom(ipfs, `${netPrefix}-signal`);
   console.log(id);
   store.id = id;
-  store.address = `/ip4/${address()}/tcp/4001/ipfs/${id}`;
+  store.address = `/ip4/${address()}/tcp/4002/ipfs/${id}`;
 })();

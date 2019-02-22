@@ -35,4 +35,4 @@ export const netPrefix = (() => network === 'leofcoin' ? mainNethash : testNetha
 
 export const networkPath = join(process.cwd(), network === 'olivia' ? '.leofcoin/olivia' : '.leofcoin')
 
-export const port = process.env.PORT || 8080;
+export const port = process.env.PORT || process.argv[process.argv.indexOf('--port') + 1] || 8080;

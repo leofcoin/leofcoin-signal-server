@@ -38,7 +38,7 @@ const netPrefix = (() => network === 'leofcoin' ? mainNethash : testNethash)();
 
 const networkPath = path.join(process.cwd(), network === 'olivia' ? '.leofcoin/olivia' : '.leofcoin');
 
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || process.argv[process.argv.indexOf('--port') + 1] || 8080;
 
 class SpaceRoom extends PeerMonitor {
   /**
@@ -55,7 +55,7 @@ class SpaceRoom extends PeerMonitor {
     }, (err, res) => {});
 
     this.topic = topic;
-    this.peer = [];
+    this.peers = [];
 
     this._peerJoined = this._peerJoined.bind(this);
     this._peerLeft = this._peerLeft.bind(this);
@@ -150,12 +150,13 @@ if (process.argv.indexOf('--no-front') === -1) {
       swarm: 4002,
       gateway: 9090,
       api: 5002
-    }
+    },
+    ws: true
   });
   const { ipfs, addresses } = yield ipfsd.start();
   const { id } = yield ipfs.id();
   new SpaceRoom(ipfs, `${netPrefix}-signal`);
   console.log(id);
   store.id = id;
-  store.address = `/ip4/${ip.address()}/tcp/4001/ipfs/${id}`;
+  store.address = `/ip4/${ip.address()}/tcp/4002/ipfs/${id}`;
 }()))();
