@@ -6,13 +6,15 @@
   "scripts": {
     "heroku-postbuild": "yarn global add rollup && yarn build",
     "build": "rollup -c",
-    "start": "node server.js --network olivia"
+    "start": "node server.js --network olivia",
+    "start-dev": "node server.js --network olivia --port 5050"
   },
   "dependencies": {
-    "express": "^4.16.3",
+    "@leofcoin/dapnets": "^1.1.1",
+    "express": "^4.17.1",
     "ipfs-pubsub-1on1": "0.0.4",
     "ipfs-pubsub-peer-monitor": "0.0.8",
-    "ipfsd-node": "^0.2.10",
+    "ipfsd-node": "^0.2.13",
     "leofcoin-hash": "^0.1.0",
     "leofcoin-params": "^0.1.0"
   },
