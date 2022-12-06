@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@leofcoin/dapnets": "^1.1.1",
-    "express": "^4.17.1",
+    "express": "^4.18.2",
     "ipfs-pubsub-1on1": "0.0.4",
     "ipfs-pubsub-peer-monitor": "0.0.8",
     "ipfsd-node": "^0.2.13",
